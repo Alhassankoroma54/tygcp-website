@@ -111,6 +111,25 @@ textarea:focus-visible,
     background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
     background-size: 18px 18px;
   }
+
+  /* Very slow, subtle "Ken Burns" zoom for the hero slideshow (see
+     HeroSlideshow.tsx). Runs independently on every slide, not just the
+     active one, and independently of the crossfade timing — at this
+     duration and scale it reads as gentle ambient motion, not something
+     that needs to sync with any other animation. Collapses to
+     near-instant automatically under the prefers-reduced-motion rule
+     above, same as every other animation on the site. */
+  .hero-slide-zoom {
+    animation: hero-slide-zoom 22s ease-in-out infinite alternate;
+  }
+  @keyframes hero-slide-zoom {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.06);
+    }
+  }
   .container-page {
     max-width: 80rem;
     margin-left: auto;

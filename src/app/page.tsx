@@ -6,11 +6,13 @@ import SectionHeading from "@/components/SectionHeading";
 import ImpactStrip from "@/components/ImpactStrip";
 import EpisodeCard from "@/components/EpisodeCard";
 import HeroVisual from "@/components/HeroVisual";
+import HeroSlideshow from "@/components/HeroSlideshow";
 import { SpotifyGlyph, ApplePodcastsGlyph, YouTubeGlyph } from "@/components/PlatformIcons";
 import NewsletterForm from "@/components/forms/NewsletterForm";
 import CtaBanner from "@/components/CtaBanner";
 import { site } from "@/data/site";
 import { heroStats } from "@/data/impact";
+import { heroSlideshowImages } from "@/data/heroSlideshow";
 import { getLatestEpisodes } from "@/data/episodes";
 import { getLatestNews } from "@/data/news";
 import { getUpcomingEvents } from "@/data/events";
@@ -28,9 +30,15 @@ export default function Home() {
     <div>
       {/* HERO — composition follows the approved reference: headline/CTA/
           platform-row on the left, a studio mic+headphones illustration on
-          the right, with the impact stats floating across the bottom edge. */}
+          the right, with the impact stats floating across the bottom edge.
+          bg-hero-radial stays as the section's own background (shows
+          instantly, before any slideshow image has loaded, and continues
+          to show through the slideshow's translucent overlay) — the
+          slideshow layers on top of it, and the actual hero content
+          (below) stacks above both via z-10. */}
       <section className="relative overflow-hidden bg-hero-radial">
-        <Container className="grid gap-10 pb-24 pt-16 sm:pb-28 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:pb-32 lg:pt-24">
+        <HeroSlideshow images={heroSlideshowImages} intervalMs={5000} />
+        <Container className="relative z-10 grid gap-10 pb-24 pt-16 sm:pb-28 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:pb-32 lg:pt-24">
           <div>
             <Badge tone="outline" className="border-white/20 text-white/70">
               National Youth Civic Engagement Podcast
