@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   }
 
   const { name, email, reason, message } = parsed.data;
-  const saved = saveContactSubmission({ name, email, reason, message });
+  const saved = await saveContactSubmission({ name, email, reason, message });
   const emailResult = await notifyContactSubmission({ name, email, reason, message });
 
   return NextResponse.json({

@@ -30,8 +30,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — .env* correctly excludes .env / .env.local (real values), but
+# also matched .env.example by accident, which holds no secrets and is
+# meant to be committed as the template for what variables to set (found
+# while touching this file for Phase 3 Batch 1 — .env.example had silently
+# never been tracked since the Phase 2 commit). The negation re-includes it.
 .env*
+!.env.example
 
 # vercel
 .vercel

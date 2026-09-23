@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const { name, district, topic, question } = parsed.data;
-  const saved = saveMinisterQuestion({ name, district: district || undefined, topic: topic || undefined, question });
+  const saved = await saveMinisterQuestion({ name, district: district || undefined, topic: topic || undefined, question });
   const emailResult = await notifyMinisterQuestion({
     name,
     district: district || undefined,

@@ -1,123 +1,87 @@
 /**
  * Submission persistence layer.
  *
- * WHY THIS FILE EXISTS INSTEAD OF A GENERATED PRISMA CLIENT:
- * `prisma/schema.prisma` is the authoritative, documented schema and the
- * recommended production path (Prisma + Postgres — see README.md). But
- * `prisma generate`/`migrate` need to download a native query-engine binary
- * from binaries.prisma.sh, and the sandboxed environment this project was
- * built and tested in has no network access to that host (confirmed: both
- * `prisma migrate dev` and `prisma generate` fail there with a 403). Rather
- * than ship and claim a Prisma integration that was never actually run, this
- * file implements the exact same four tables using Node's built-in
- * `node:sqlite` module (stable in Node 22+, zero install, zero network) so
- * the whole submission pipeline could be genuinely built and tested end to
- * end in that environment.
+ * PHASE 3 BATCH 1 — now backed by a real `@prisma/client` against Postgres,
+ * replacing the Phase 2 hand-written `node:sqlite` implementation. History,
+ * for context: `prisma generate` needs to download a query-engine binary
+ * from binaries.prisma.sh/objects.prisma.sh, and the sandbox this project
+ * was originally built in had no network access to either host (still true
+ * as of this batch — reconfirmed, both return a 403 policy denial). Phase 2
+ * shipped a hand-rolled SQLite module with the exact same four tables and
+ * exported function signatures so the whole submission pipeline could
+ * genuinely be built and tested end to end in that environment, with the
+ * explicit intent (stated in that version's header comment) that swapping
+ * this file's internals for real `@prisma/client` calls would be a
+ * same-shaped, mechanical change once Postgres was in place. This is that
+ * swap. It still cannot be executed inside the sandbox that wrote it — see
+ * the Batch 1 report for exactly what was and wasn't verified.
  *
- * On a normal machine or in CI/Vercel (both of which have full internet
- * access), `npx prisma generate && npx prisma migrate dev` will work
- * immediately against the existing schema.prisma, and swapping this file's
- * internals for `@prisma/client` calls is a same-shaped, mechanical change —
- * every exported function below keeps working with the same signature
- * either way, so nothing that imports from "@/lib/db" needs to change.
+ * CONTRACT CHANGE (deliberate, not silent — every caller was updated):
+ * every exported function here is now `async` and returns a Promise, because
+ * every `@prisma/client` call is asynchronous. The old SQLite version was
+ * synchronous. All five call sites (the four form API routes plus
+ * src/app/admin/page.tsx) were already inside an `async function`, so each
+ * one only needed an `await` added — no control-flow restructuring. Every
+ * other detail of every function's signature (parameter shape, return shape,
+ * field names and types) is unchanged from Phase 2: `createdAt` is still
+ * returned as an ISO string (not a native Date) specifically so nothing
+ * downstream — e.g. admin/page.tsx's `formatTimestamp` — needed to change.
  *
- * PRODUCTION NOTE: this SQLite file (prisma/dev.db) is for local development
- * only. Vercel's serverless filesystem is ephemeral and read-only outside
- * /tmp, so this module refuses to write anywhere in production (see
- * isPersistenceAvailable below) — deploying without a real DATABASE_URL
- * pointed at Postgres means submissions are still validated and logged/
- * emailed (see notify.ts) but not durably stored, exactly as before this
- * change. This is intentionally a loud, visible limitation rather than a
- * silent one — see the `persisted: boolean` field every save*() function
- * returns.
+ * PRODUCTION NOTE: persistence is now considered "configured" purely based
+ * on whether DATABASE_URL is set — not on whether the app happens to be
+ * running on Vercel (that was the Phase 2 behavior, and it meant persistence
+ * was hard-disabled in production even if a real database URL were set).
+ * Every save/list function still degrades to "not persisted" / "empty list"
+ * rather than throwing if the database is unreachable — the visible
+ * behavior (amber "no durable storage configured" banner in /admin, forms
+ * that still succeed and still email even when the database write fails) is
+ * unchanged from Phase 2; only *why* persistence might be unavailable has
+ * changed (missing/unreachable DATABASE_URL, not "we're on Vercel").
  */
-import { DatabaseSync, type StatementSync } from "node:sqlite";
-import { randomUUID } from "node:crypto";
-import path from "node:path";
+import { PrismaClient } from "@prisma/client";
 
-const isProduction = process.env.NODE_ENV === "production" && !!process.env.VERCEL;
+// Reused across warm invocations (serverless function instances, and Next's
+// dev-mode hot reload) instead of constructing a new PrismaClient — and
+// therefore a new connection pool — on every import. This is the standard
+// Next.js + Prisma pattern; caching on `globalThis` survives module
+// re-evaluation in dev and is harmless in production (each cold start gets
+// a fresh module scope regardless, so there's nothing to leak there).
+const globalForPrisma = globalThis as unknown as { prismaClient?: PrismaClient };
 
-let db: DatabaseSync | null = null;
+// Set once client construction fails, so a broken configuration isn't
+// retried on every single request within the same warm instance — mirrors
+// the Phase 2 SQLite module's `dbUnavailable` flag, same reasoning: a retry
+// would fail the same way and cost a network round-trip every time.
+let clientUnavailable = false;
 
-// Set once opening+schema setup fails, so a broken connection isn't retried
-// on every single request (each retry would fail the same way and cost a
-// disk round-trip) — but see the comment on `run()` below for why a
-// mid-session failure (e.g. the disk filling up, or the file being moved
-// out from under a live process) still gets caught per-query rather than
-// crashing the request that hit it.
-let dbUnavailable = false;
-
-function getDb(): DatabaseSync | null {
-  if (isProduction) {
-    // No writable, persistent filesystem on Vercel — see file header.
-    // A real DATABASE_URL + Postgres client should replace this module
-    // before relying on durable storage in production.
+function getClient(): PrismaClient | null {
+  if (!process.env.DATABASE_URL) {
+    // No persistence configured — same "not an error" state Phase 2 had for
+    // local dev with no database. Every function below is written to treat
+    // this identically to a configured-but-unreachable database.
     return null;
   }
-  if (db) return db;
-  if (dbUnavailable) return null;
+  if (clientUnavailable) return null;
+  if (globalForPrisma.prismaClient) return globalForPrisma.prismaClient;
 
-  const dbPath = path.join(process.cwd(), "prisma", "dev.db");
   try {
-    const conn = new DatabaseSync(dbPath);
-    conn.exec(`
-      CREATE TABLE IF NOT EXISTS contact_submissions (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        reason TEXT NOT NULL,
-        message TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'new',
-        created_at TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_contact_created ON contact_submissions(created_at);
-
-      CREATE TABLE IF NOT EXISTS minister_questions (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        district TEXT,
-        topic TEXT,
-        question TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'new',
-        created_at TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_question_created ON minister_questions(created_at);
-
-      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-        id TEXT PRIMARY KEY,
-        email TEXT NOT NULL UNIQUE,
-        confirmed INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_newsletter_created ON newsletter_subscribers(created_at);
-
-      CREATE TABLE IF NOT EXISTS rsvp_submissions (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        district TEXT,
-        event_slug TEXT NOT NULL,
-        event_title TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_rsvp_event ON rsvp_submissions(event_slug);
-    `);
-    db = conn;
-    return db;
+    const client = new PrismaClient();
+    globalForPrisma.prismaClient = client;
+    return client;
   } catch (err) {
-    // Opening the file or creating the schema failed (permissions, a full
-    // disk, a corrupt file, ...). Logged so it's visible in the server
-    // console/Vercel function logs, but never thrown — every save*()
-    // function below treats this exactly like "no persistence configured"
-    // (persisted: false) rather than crashing the request and losing
-    // whatever the user just submitted.
-    console.error("[db] Failed to open/initialise local SQLite database:", err);
-    dbUnavailable = true;
+    // Prisma throws synchronously here if DATABASE_URL is malformed enough
+    // that the client can't even be constructed (a genuinely broken
+    // connection string, not just an unreachable host — those fail later,
+    // per-query, and are caught individually below). Logged, never thrown:
+    // treated the same as "no persistence configured," never as a reason to
+    // crash a request that hit it.
+    console.error("[db] Failed to initialise Prisma client:", err);
+    clientUnavailable = true;
     return null;
   }
 }
 
-export const isPersistenceAvailable = !isProduction;
+export const isPersistenceAvailable = Boolean(process.env.DATABASE_URL);
 
 export type ContactSubmission = {
   id: string;
@@ -156,83 +120,69 @@ export type RsvpSubmission = {
   createdAt: string;
 };
 
-/**
- * Runs an INSERT/UPDATE and reports whether it actually succeeded, instead
- * of letting a write error (a full disk, a lock, a file that became
- * unwritable mid-session, ...) throw and crash the API route that called
- * it. A public form submission failing should degrade to "not saved, but
- * here's a normal response" — never a raw 500 that loses the user's input
- * with no explanation.
- */
-function run(stmt: StatementSync | undefined, params: Record<string, unknown>): boolean {
-  if (!stmt) return false;
-  try {
-    stmt.run(params);
-    return true;
-  } catch (err) {
-    console.error("[db] Write failed:", err);
-    return false;
-  }
-}
-
-export function saveContactSubmission(data: {
+export async function saveContactSubmission(data: {
   name: string;
   email: string;
   reason: string;
   message: string;
-}): { persisted: boolean; id: string | null } {
-  const conn = getDb();
-  const id = randomUUID();
-  if (!conn) return { persisted: false, id: null };
-  const ok = run(
-    conn.prepare(
-      `INSERT INTO contact_submissions (id, name, email, reason, message, status, created_at)
-       VALUES (@id, @name, @email, @reason, @message, 'new', @createdAt)`
-    ),
-    { id, ...data, createdAt: new Date().toISOString() }
-  );
-  return { persisted: ok, id: ok ? id : null };
+}): Promise<{ persisted: boolean; id: string | null }> {
+  const client = getClient();
+  if (!client) return { persisted: false, id: null };
+  try {
+    const row = await client.contactSubmission.create({ data });
+    return { persisted: true, id: row.id };
+  } catch (err) {
+    console.error("[db] Write failed:", err);
+    return { persisted: false, id: null };
+  }
 }
 
-export function saveMinisterQuestion(data: {
+export async function saveMinisterQuestion(data: {
   name: string;
   district?: string;
   topic?: string;
   question: string;
-}): { persisted: boolean; id: string | null } {
-  const conn = getDb();
-  const id = randomUUID();
-  if (!conn) return { persisted: false, id: null };
-  const ok = run(
-    conn.prepare(
-      `INSERT INTO minister_questions (id, name, district, topic, question, status, created_at)
-       VALUES (@id, @name, @district, @topic, @question, 'new', @createdAt)`
-    ),
-    {
-      id,
-      name: data.name,
-      district: data.district ?? null,
-      topic: data.topic ?? null,
-      question: data.question,
-      createdAt: new Date().toISOString(),
-    }
-  );
-  return { persisted: ok, id: ok ? id : null };
+}): Promise<{ persisted: boolean; id: string | null }> {
+  const client = getClient();
+  if (!client) return { persisted: false, id: null };
+  try {
+    const row = await client.ministerQuestion.create({
+      data: {
+        name: data.name,
+        district: data.district ?? null,
+        topic: data.topic ?? null,
+        question: data.question,
+      },
+    });
+    return { persisted: true, id: row.id };
+  } catch (err) {
+    console.error("[db] Write failed:", err);
+    return { persisted: false, id: null };
+  }
 }
 
-export function saveNewsletterSubscriber(email: string): {
+export async function saveNewsletterSubscriber(email: string): Promise<{
   persisted: boolean;
   id: string | null;
   alreadySubscribed: boolean;
-} {
-  const conn = getDb();
-  if (!conn) return { persisted: false, id: null, alreadySubscribed: false };
+}> {
+  const client = getClient();
+  if (!client) return { persisted: false, id: null, alreadySubscribed: false };
 
-  let existing: { id: string } | undefined;
+  // Two separate try/catch blocks, same as the Phase 2 SQLite version: a
+  // read failure and a write failure are distinct, both logged, both
+  // degrade the same way. NOTE (carried over unchanged from Phase 2, not a
+  // new limitation introduced here): this check-then-insert is not atomic —
+  // two concurrent signups with the same email could both pass the
+  // `findUnique` check before either `create` runs. The `email @unique`
+  // constraint still prevents a duplicate row either way; the only
+  // consequence is that the loser of that race gets a generic write-failure
+  // response instead of a friendly "already subscribed" one. Acceptable for
+  // this form's real-world traffic; flagged here rather than silently
+  // "fixed" with a behavior change outside this batch's scope.
+  let existing: { id: string } | null;
   try {
-    existing = conn.prepare(`SELECT id FROM newsletter_subscribers WHERE email = @email`).get({ email }) as
-      | { id: string }
-      | undefined;
+    existing = await client.newsletterSubscriber.findUnique({ where: { email }, select: { id: true } });
   } catch (err) {
     console.error("[db] Read failed:", err);
     return { persisted: false, id: null, alreadySubscribed: false };
@@ -241,138 +191,87 @@ export function saveNewsletterSubscriber(email: string): {
     return { persisted: true, id: existing.id, alreadySubscribed: true };
   }
 
-  const id = randomUUID();
-  const ok = run(
-    conn.prepare(
-      `INSERT INTO newsletter_subscribers (id, email, confirmed, created_at)
-       VALUES (@id, @email, 0, @createdAt)`
-    ),
-    { id, email, createdAt: new Date().toISOString() }
-  );
-  return { persisted: ok, id: ok ? id : null, alreadySubscribed: false };
+  try {
+    const row = await client.newsletterSubscriber.create({ data: { email } });
+    return { persisted: true, id: row.id, alreadySubscribed: false };
+  } catch (err) {
+    console.error("[db] Write failed:", err);
+    return { persisted: false, id: null, alreadySubscribed: false };
+  }
 }
 
-export function saveRsvpSubmission(data: {
+export async function saveRsvpSubmission(data: {
   name: string;
   phone: string;
   district?: string;
   eventSlug: string;
   eventTitle: string;
-}): { persisted: boolean; id: string | null } {
-  const conn = getDb();
-  const id = randomUUID();
-  if (!conn) return { persisted: false, id: null };
-  const ok = run(
-    conn.prepare(
-      `INSERT INTO rsvp_submissions (id, name, phone, district, event_slug, event_title, created_at)
-       VALUES (@id, @name, @phone, @district, @eventSlug, @eventTitle, @createdAt)`
-    ),
-    {
-      id,
-      name: data.name,
-      phone: data.phone,
-      district: data.district ?? null,
-      eventSlug: data.eventSlug,
-      eventTitle: data.eventTitle,
-      createdAt: new Date().toISOString(),
-    }
-  );
-  return { persisted: ok, id: ok ? id : null };
+}): Promise<{ persisted: boolean; id: string | null }> {
+  const client = getClient();
+  if (!client) return { persisted: false, id: null };
+  try {
+    const row = await client.rsvpSubmission.create({
+      data: {
+        name: data.name,
+        phone: data.phone,
+        district: data.district ?? null,
+        eventSlug: data.eventSlug,
+        eventTitle: data.eventTitle,
+      },
+    });
+    return { persisted: true, id: row.id };
+  } catch (err) {
+    console.error("[db] Write failed:", err);
+    return { persisted: false, id: null };
+  }
 }
 
 // --- Admin read access (used by /admin only, see src/app/admin) -----------
 
-function safeList<T>(query: () => T[]): T[] {
+export async function listContactSubmissions(): Promise<ContactSubmission[]> {
+  const client = getClient();
+  if (!client) return [];
   try {
-    return query();
+    const rows = await client.contactSubmission.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
   } catch (err) {
     console.error("[db] Read failed:", err);
     return [];
   }
 }
 
-export function listContactSubmissions(): ContactSubmission[] {
-  const conn = getDb();
-  if (!conn) return [];
-  return safeList(() =>
-    conn
-      .prepare(`SELECT * FROM contact_submissions ORDER BY created_at DESC`)
-      .all()
-      .map((r) => rowToContact(r as Record<string, unknown>))
-  );
+export async function listMinisterQuestions(): Promise<MinisterQuestion[]> {
+  const client = getClient();
+  if (!client) return [];
+  try {
+    const rows = await client.ministerQuestion.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+  } catch (err) {
+    console.error("[db] Read failed:", err);
+    return [];
+  }
 }
 
-export function listMinisterQuestions(): MinisterQuestion[] {
-  const conn = getDb();
-  if (!conn) return [];
-  return safeList(() =>
-    conn
-      .prepare(`SELECT * FROM minister_questions ORDER BY created_at DESC`)
-      .all()
-      .map((r) => rowToQuestion(r as Record<string, unknown>))
-  );
+export async function listNewsletterSubscribers(): Promise<NewsletterSubscriber[]> {
+  const client = getClient();
+  if (!client) return [];
+  try {
+    const rows = await client.newsletterSubscriber.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+  } catch (err) {
+    console.error("[db] Read failed:", err);
+    return [];
+  }
 }
 
-export function listNewsletterSubscribers(): NewsletterSubscriber[] {
-  const conn = getDb();
-  if (!conn) return [];
-  return safeList(() =>
-    conn
-      .prepare(`SELECT * FROM newsletter_subscribers ORDER BY created_at DESC`)
-      .all()
-      .map((r) => rowToSubscriber(r as Record<string, unknown>))
-  );
-}
-
-export function listRsvpSubmissions(): RsvpSubmission[] {
-  const conn = getDb();
-  if (!conn) return [];
-  return safeList(() =>
-    conn
-      .prepare(`SELECT * FROM rsvp_submissions ORDER BY created_at DESC`)
-      .all()
-      .map((r) => rowToRsvp(r as Record<string, unknown>))
-  );
-}
-
-function rowToContact(r: Record<string, unknown>): ContactSubmission {
-  return {
-    id: String(r.id),
-    name: String(r.name),
-    email: String(r.email),
-    reason: String(r.reason),
-    message: String(r.message),
-    status: String(r.status),
-    createdAt: String(r.created_at),
-  };
-}
-function rowToQuestion(r: Record<string, unknown>): MinisterQuestion {
-  return {
-    id: String(r.id),
-    name: String(r.name),
-    district: r.district == null ? null : String(r.district),
-    topic: r.topic == null ? null : String(r.topic),
-    question: String(r.question),
-    status: String(r.status),
-    createdAt: String(r.created_at),
-  };
-}
-function rowToSubscriber(r: Record<string, unknown>): NewsletterSubscriber {
-  return {
-    id: String(r.id),
-    email: String(r.email),
-    confirmed: Boolean(r.confirmed),
-    createdAt: String(r.created_at),
-  };
-}
-function rowToRsvp(r: Record<string, unknown>): RsvpSubmission {
-  return {
-    id: String(r.id),
-    name: String(r.name),
-    phone: String(r.phone),
-    district: r.district == null ? null : String(r.district),
-    eventSlug: String(r.event_slug),
-    eventTitle: String(r.event_title),
-    createdAt: String(r.created_at),
-  };
+export async function listRsvpSubmissions(): Promise<RsvpSubmission[]> {
+  const client = getClient();
+  if (!client) return [];
+  try {
+    const rows = await client.rsvpSubmission.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+  } catch (err) {
+    console.error("[db] Read failed:", err);
+    return [];
+  }
 }

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const saved = saveRsvpSubmission({ name, phone, district: district || undefined, eventSlug, eventTitle: event });
+  const saved = await saveRsvpSubmission({ name, phone, district: district || undefined, eventSlug, eventTitle: event });
   const emailResult = await notifyRsvp({ name, phone, district: district || undefined, event });
 
   return NextResponse.json({

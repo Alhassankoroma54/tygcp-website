@@ -69,10 +69,14 @@ export default async function AdminDashboardPage() {
     redirect("/admin/login");
   }
 
-  const contacts = listContactSubmissions();
-  const questions = listMinisterQuestions();
-  const subscribers = listNewsletterSubscribers();
-  const rsvps = listRsvpSubmissions();
+  // Four independent reads — run them concurrently rather than one after
+  // another (each is now an async Prisma query as of Phase 3 Batch 1).
+  const [contacts, questions, subscribers, rsvps] = await Promise.all([
+    listContactSubmissions(),
+    listMinisterQuestions(),
+    listNewsletterSubscribers(),
+    listRsvpSubmissions(),
+  ]);
 
   return (
     <div className="min-h-screen bg-navy/[0.03]">

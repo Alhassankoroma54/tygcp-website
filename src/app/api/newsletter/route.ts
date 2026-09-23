@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const { email } = parsed.data;
-  const saved = saveNewsletterSubscriber(email);
+  const saved = await saveNewsletterSubscriber(email);
   const emailResult = await notifyNewsletterSignup(email, saved.alreadySubscribed);
 
   return NextResponse.json({
