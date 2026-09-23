@@ -13,6 +13,7 @@ import {
   listRsvpSubmissions,
 } from "@/lib/db";
 import LogoutButton from "@/components/admin/LogoutButton";
+import AdminNav from "@/components/admin/AdminNav";
 
 function formatTimestamp(iso: string) {
   return new Date(iso).toLocaleString("en-GB", {
@@ -89,6 +90,10 @@ export default async function AdminDashboardPage() {
           <LogoutButton />
         </div>
       </header>
+      {/* PHASE 4 BATCH 1: nav shell shared with the new Episodes/News/Events
+          foundation pages — see src/components/admin/AdminNav.tsx. Every
+          section below (Contact/Questions/Newsletter/RSVP) is unchanged. */}
+      <AdminNav />
 
       <div className="container-page space-y-8 py-10">
         {!isPersistenceAvailable && (
