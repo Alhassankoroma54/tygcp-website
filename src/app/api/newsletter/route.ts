@@ -21,13 +21,26 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  if (parsed.data.company) {
+  if (parsed.data.hp_check) {
     return NextResponse.json({ message: "You're subscribed!" });
   }
 
   const { email } = parsed.data;
   const saved = await saveNewsletterSubscriber(email);
   const emailResult = await notifyNewsletterSignup(email, saved.alreadySubscribed);
+
+  // PRODUCTION HOTFIX: see api/contact/route.ts for the full diagnosis —
+  // same fix applied here. saveNewsletterSubscriber() also reports
+  // persisted: true for an email that was already subscribed (a real,
+  // pre-existing row), so this only rejects a genuine, newly-attempted
+  // failure — not the "already on the list" case.
+  if (!saved.persisted) {
+    console.error("[api/newsletter] Persistence failed for a genuine submission; not reporting success.");
+    return NextResponse.json(
+      { error: "We couldn't save your submission right now. Please try again." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     message: saved.alreadySubscribed

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  if (parsed.data.company) {
+  if (parsed.data.hp_check) {
     return NextResponse.json({ message: "You're registered!" });
   }
 
@@ -45,6 +45,16 @@ export async function POST(req: Request) {
 
   const saved = await saveRsvpSubmission({ name, phone, district: district || undefined, eventSlug, eventTitle: event });
   const emailResult = await notifyRsvp({ name, phone, district: district || undefined, event });
+
+  // PRODUCTION HOTFIX: see api/contact/route.ts for the full diagnosis —
+  // same fix applied here.
+  if (!saved.persisted) {
+    console.error("[api/rsvp] Persistence failed for a genuine submission; not reporting success.");
+    return NextResponse.json(
+      { error: "We couldn't save your submission right now. Please try again." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     message: "You're registered! We'll be in touch with more details.",

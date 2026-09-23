@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useFormSubmit, FormNote, Honeypot } from "./FormShell";
 import Button from "../Button";
 
-const emptyForm = { name: "", district: "", topic: "", question: "", company: "" };
+const emptyForm = { name: "", district: "", topic: "", question: "", hp_check: "" };
 
 export default function QuestionForm() {
   const [form, setForm] = useState(emptyForm);
@@ -54,7 +54,7 @@ export default function QuestionForm() {
           className="input resize-none"
         />
       </Field>
-      <Honeypot value={form.company} onChange={(company) => setForm({ ...form, company })} />
+      <Honeypot value={form.hp_check} onChange={(hp_check) => setForm({ ...form, hp_check })} />
       <Button type="submit" variant="primary" className="w-fit" disabled={status === "loading"}>
         {status === "loading" ? "Submitting…" : "Submit Your Question"}
       </Button>
