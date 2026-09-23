@@ -14,7 +14,17 @@ import {
 } from "@/data/about";
 import { site } from "@/data/site";
 
-export const metadata: Metadata = { title: "About" };
+export const metadata: Metadata = {
+  title: "About",
+  description: site.description,
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About",
+    description: site.description,
+    type: "website",
+    url: "/about",
+  },
+};
 
 export default function AboutPage() {
   return (
@@ -49,7 +59,7 @@ export default function AboutPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {projectModel.map((step, i) => (
               <div key={step.step} className="rounded-2xl border border-navy/10 bg-white p-5">
-                <span className="text-xs font-bold uppercase tracking-wide text-green">Step {i + 1}</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-green-ink">Step {i + 1}</span>
                 <h4 className="mt-1 text-sm font-bold text-navy">{step.step}</h4>
                 <p className="mt-2 text-sm leading-relaxed text-foreground/60">{step.description}</p>
               </div>
@@ -72,13 +82,13 @@ export default function AboutPage() {
 
           <div className="rounded-2xl border border-navy/10 bg-white p-6">
             <h3 className="text-sm font-bold uppercase tracking-wide text-navy">Who We Serve</h3>
-            <p className="mt-3 text-xs font-bold uppercase tracking-wide text-green">Primary Beneficiaries</p>
+            <p className="mt-3 text-xs font-bold uppercase tracking-wide text-green-ink">Primary Beneficiaries</p>
             <ul className="mt-2 space-y-1.5 text-sm text-foreground/65">
               {primaryBeneficiaries.map((b) => (
                 <li key={b}>• {b}</li>
               ))}
             </ul>
-            <p className="mt-4 text-xs font-bold uppercase tracking-wide text-green">Secondary Beneficiaries</p>
+            <p className="mt-4 text-xs font-bold uppercase tracking-wide text-green-ink">Secondary Beneficiaries</p>
             <ul className="mt-2 space-y-1.5 text-sm text-foreground/65">
               {secondaryBeneficiaries.map((b) => (
                 <li key={b}>• {b}</li>

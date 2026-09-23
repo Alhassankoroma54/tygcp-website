@@ -30,9 +30,9 @@ export default function EpisodeCard({ episode, index = 0 }: { episode: Episode; 
         <div className="flex items-center gap-2">
           <Badge tone="green">{episode.topic}</Badge>
         </div>
-        <h3 className="text-sm font-bold leading-snug text-navy group-hover:text-green">{episode.title}</h3>
+        <h3 className="text-sm font-bold leading-snug text-navy group-hover:text-green-ink">{episode.title}</h3>
         <p className="line-clamp-2 text-xs leading-relaxed text-foreground/60">{episode.summary}</p>
-        <div className="mt-auto flex items-center gap-2 pt-2 text-[11px] font-medium text-foreground/50">
+        <div className="mt-auto flex items-center gap-2 pt-2 text-[11px] font-medium text-foreground/60">
           <span>{formatDate(episode.date)}</span>
           <span>•</span>
           <span>{episode.duration}</span>

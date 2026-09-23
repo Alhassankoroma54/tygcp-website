@@ -4,7 +4,19 @@ import Container from "@/components/Container";
 import ContactForm from "@/components/forms/ContactForm";
 import { site } from "@/data/site";
 
-export const metadata: Metadata = { title: "Contact" };
+export const metadata: Metadata = {
+  title: "Contact",
+  description:
+    "Questions, partnership enquiries, media requests or feedback — we'd love to hear from you.",
+  alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contact",
+    description:
+      "Questions, partnership enquiries, media requests or feedback — we'd love to hear from you.",
+    type: "website",
+    url: "/contact",
+  },
+};
 
 export default function ContactPage() {
   return (

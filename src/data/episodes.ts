@@ -1,3 +1,11 @@
+/**
+ * ILLUSTRATIVE EXAMPLE CONTENT — every episode below (guests, dates,
+ * descriptions, tags) is a placeholder demonstrating the episode system,
+ * not a record of an episode that has actually been recorded or aired.
+ * No episode has a real `audioUrl` (see PodcastPlayer.tsx) because no
+ * audio has been produced yet. Replace with real episodes — and only set
+ * `audioUrl` once a real recording is hosted somewhere — before launch.
+ */
 export type Episode = {
   slug: string;
   episodeNumber: number;
@@ -155,4 +163,20 @@ export function getLatestEpisodes(count = 4) {
   return [...episodes]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, count);
+}
+
+/**
+ * Chronological neighbours of an episode (by publish date), for
+ * previous/next navigation on the episode detail page. "Previous" is the
+ * episode released before this one, "next" is the one released after —
+ * either can be null at the two ends of the archive.
+ */
+export function getAdjacentEpisodes(slug: string): { previous: Episode | null; next: Episode | null } {
+  const sorted = [...episodes].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const idx = sorted.findIndex((e) => e.slug === slug);
+  if (idx === -1) return { previous: null, next: null };
+  return {
+    previous: idx > 0 ? sorted[idx - 1] : null,
+    next: idx < sorted.length - 1 ? sorted[idx + 1] : null,
+  };
 }

@@ -1,3 +1,12 @@
+/**
+ * ILLUSTRATIVE EXAMPLE CONTENT — every name, quote, and profile in this
+ * file (youth voices, district highlights, changemakers, fact-checks,
+ * policy explainers) is a placeholder written to show how the layouts
+ * render real content, not a record of an actual person, interview, or
+ * verified claim. Replace with real testimonials/profiles — with consent
+ * — and real fact-checked claims before launch. Do not treat anything
+ * here as a genuine quote attributable to a real person.
+ */
 export type YouthVoice = {
   name: string;
   age?: number;

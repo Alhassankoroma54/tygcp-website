@@ -72,23 +72,35 @@ function Counter({ value }: { value: number }) {
   return <span ref={ref}>{formatNumber(display)}</span>;
 }
 
-export default function ImpactStrip({ stats }: { stats: ImpactStat[] }) {
+export default function ImpactStrip({
+  stats,
+  label = "12-Month Programme Targets",
+}: {
+  stats: ImpactStat[];
+  /** Set to null to omit the caption (only if the surrounding page already labels these numbers as targets). */
+  label?: string | null;
+}) {
   return (
-    <div className="grid grid-cols-2 divide-x divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/5 backdrop-blur sm:grid-cols-4 sm:divide-y-0">
-      {stats.map((stat) => (
-        <div key={stat.label} className="flex items-center gap-3 px-5 py-5">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-green-light">
-            {icons[stat.icon]}
-          </span>
-          <div>
-            <div className="text-2xl font-extrabold text-white sm:text-[26px]">
-              <Counter value={stat.value} />
-              {stat.suffix}
+    <div>
+      {label && (
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/50">{label}</p>
+      )}
+      <div className="grid grid-cols-2 divide-x divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/5 backdrop-blur sm:grid-cols-4 sm:divide-y-0">
+        {stats.map((stat) => (
+          <div key={stat.label} className="flex items-center gap-3 px-5 py-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-green-light">
+              {icons[stat.icon]}
+            </span>
+            <div>
+              <div className="text-2xl font-extrabold text-white sm:text-[26px]">
+                <Counter value={stat.value} />
+                {stat.suffix}
+              </div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-white/50">{stat.label}</div>
             </div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-white/50">{stat.label}</div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

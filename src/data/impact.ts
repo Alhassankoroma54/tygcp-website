@@ -5,6 +5,14 @@ export type ImpactStat = {
   icon: "mic" | "users" | "chart" | "institution" | "message" | "map";
 };
 
+/**
+ * These are the project's stated 12-month PROGRAMME TARGETS (from the
+ * original results framework), not numbers already achieved — the podcast
+ * has not launched yet (see src/data/news.ts). Always render this data with
+ * a visible "target" label (ImpactStrip's default `label` prop does this);
+ * never present it as a live/achieved metric. Update with real cumulative
+ * numbers once the show is live and has actual analytics to report.
+ */
 export const heroStats: ImpactStat[] = [
   { label: "Episodes", value: 24, suffix: "+", icon: "mic" },
   { label: "Youth Engaged", value: 600, suffix: "+", icon: "users" },

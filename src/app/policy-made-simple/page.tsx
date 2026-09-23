@@ -5,7 +5,19 @@ import Badge from "@/components/Badge";
 import { policyExplainers } from "@/data/voices";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Policy Made Simple" };
+export const metadata: Metadata = {
+  title: "Policy Made Simple",
+  description:
+    "Complex policy explained in plain language — one issue at a time, with no jargon.",
+  alternates: { canonical: "/policy-made-simple" },
+  openGraph: {
+    title: "Policy Made Simple",
+    description:
+      "Complex policy explained in plain language — one issue at a time, with no jargon.",
+    type: "website",
+    url: "/policy-made-simple",
+  },
+};
 
 export default function PolicyMadeSimplePage() {
   return (
@@ -22,7 +34,7 @@ export default function PolicyMadeSimplePage() {
               <Badge tone="green">Explainer</Badge>
               <h3 className="mt-4 text-sm font-bold text-navy">{p.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-foreground/60">{p.summary}</p>
-              <p className="mt-4 text-xs text-foreground/40">{formatDate(p.date)}</p>
+              <p className="mt-4 text-xs text-foreground/60">{formatDate(p.date)}</p>
             </div>
           ))}
         </div>

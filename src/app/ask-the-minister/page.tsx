@@ -6,7 +6,19 @@ import QuestionForm from "@/components/forms/QuestionForm";
 import { episodeSegments } from "@/data/topics";
 import { episodes } from "@/data/episodes";
 
-export const metadata: Metadata = { title: "Ask the Minister" };
+export const metadata: Metadata = {
+  title: "Ask the Minister",
+  description:
+    "Young people question policymakers directly, with structured follow-ups and no pre-approved questions.",
+  alternates: { canonical: "/ask-the-minister" },
+  openGraph: {
+    title: "Ask the Minister",
+    description:
+      "Young people question policymakers directly, with structured follow-ups and no pre-approved questions.",
+    type: "website",
+    url: "/ask-the-minister",
+  },
+};
 
 export default function AskTheMinisterPage() {
   const relevant = episodes.filter(
@@ -37,9 +49,9 @@ export default function AskTheMinisterPage() {
                 <div key={s.segment} className="flex items-center justify-between rounded-xl border border-navy/10 bg-white px-4 py-3">
                   <div>
                     <p className="text-sm font-bold text-navy">{s.segment}</p>
-                    <p className="text-xs text-foreground/55">{s.purpose}</p>
+                    <p className="text-xs text-foreground/60">{s.purpose}</p>
                   </div>
-                  <span className="shrink-0 text-xs font-semibold text-green">{s.time}</span>
+                  <span className="shrink-0 text-xs font-semibold text-green-ink">{s.time}</span>
                 </div>
               ))}
             </div>
@@ -47,7 +59,7 @@ export default function AskTheMinisterPage() {
 
           <aside className="rounded-2xl border border-navy/10 bg-white p-6">
             <h3 className="text-sm font-bold text-navy">Submit a Question for an Official</h3>
-            <p className="mt-2 text-xs text-foreground/55">
+            <p className="mt-2 text-xs text-foreground/60">
               Questions are reviewed by the editorial team and may be asked directly on an upcoming episode.
             </p>
             <div className="mt-4">

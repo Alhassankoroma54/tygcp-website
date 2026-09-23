@@ -27,10 +27,10 @@ export default function SectionHeading({
         <div
           className={cn(
             "mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider",
-            light ? "text-green-light" : "text-green"
+            light ? "text-green-light" : "text-green-ink"
           )}
         >
-          <span className={cn("h-1.5 w-4 rounded-full", light ? "bg-green-light" : "bg-green")} />
+          <span className={cn("h-1.5 w-4 rounded-full", light ? "bg-green-light" : "bg-green-ink")} />
           {eyebrow}
         </div>
       )}

@@ -1,25 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { useFormSubmit, FormNote } from "./FormShell";
+import { useFormSubmit, FormNote, Honeypot } from "./FormShell";
 import Button from "../Button";
 
+const emptyForm = { name: "", district: "", topic: "", question: "", company: "" };
+
 export default function QuestionForm() {
-  const [form, setForm] = useState({ name: "", district: "", topic: "", question: "" });
+  const [form, setForm] = useState(emptyForm);
   const { status, message, submit } = useFormSubmit("/api/question");
 
   return (
     <form
       className="grid gap-4"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        submit(form);
+        const ok = await submit(form);
+        if (ok) setForm(emptyForm);
       }}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Your name">
           <input
             required
+            autoComplete="name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="input"
@@ -50,7 +54,8 @@ export default function QuestionForm() {
           className="input resize-none"
         />
       </Field>
-      <Button type="submit" variant="primary" className="w-fit">
+      <Honeypot value={form.company} onChange={(company) => setForm({ ...form, company })} />
+      <Button type="submit" variant="primary" className="w-fit" disabled={status === "loading"}>
         {status === "loading" ? "Submitting…" : "Submit Your Question"}
       </Button>
       <FormNote status={status} message={message} />

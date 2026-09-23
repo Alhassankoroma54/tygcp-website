@@ -4,7 +4,19 @@ import Container from "@/components/Container";
 import NewsCard from "@/components/NewsCard";
 import { newsPosts } from "@/data/news";
 
-export const metadata: Metadata = { title: "News" };
+export const metadata: Metadata = {
+  title: "News",
+  description:
+    "Project announcements, partnership news, event updates and programme milestones.",
+  alternates: { canonical: "/news" },
+  openGraph: {
+    title: "News",
+    description:
+      "Project announcements, partnership news, event updates and programme milestones.",
+    type: "website",
+    url: "/news",
+  },
+};
 
 export default function NewsPage() {
   const sorted = [...newsPosts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

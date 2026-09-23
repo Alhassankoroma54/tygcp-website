@@ -4,7 +4,19 @@ import Container from "@/components/Container";
 import Button from "@/components/Button";
 import { youthVoices } from "@/data/voices";
 
-export const metadata: Metadata = { title: "Youth Voices" };
+export const metadata: Metadata = {
+  title: "Youth Voices",
+  description:
+    "Perspectives, questions and stories from young Sierra Leoneans who've engaged with the Governance Circle.",
+  alternates: { canonical: "/youth-voices" },
+  openGraph: {
+    title: "Youth Voices",
+    description:
+      "Perspectives, questions and stories from young Sierra Leoneans who've engaged with the Governance Circle.",
+    type: "website",
+    url: "/youth-voices",
+  },
+};
 
 export default function YouthVoicesPage() {
   return (
@@ -21,7 +33,7 @@ export default function YouthVoicesPage() {
               <p className="text-sm leading-relaxed text-foreground/80">“{v.quote}”</p>
               <footer className="mt-4 text-xs font-bold text-navy">
                 {v.name}{v.age ? `, ${v.age}` : ""}
-                <span className="block font-medium text-foreground/50">{v.role} — {v.location}</span>
+                <span className="block font-medium text-foreground/60">{v.role} — {v.location}</span>
               </footer>
             </blockquote>
           ))}

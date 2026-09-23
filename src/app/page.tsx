@@ -45,26 +45,34 @@ export default function Home() {
               <Button href="/episodes" variant="primary">
                 Listen Now
               </Button>
-              <Button href="/episodes" variant="outlineLight">
-                Watch Trailer
+              <Button href="/about" variant="outlineLight">
+                Learn More
               </Button>
             </div>
-            <div className="mt-8">
-              <p className="text-xs font-semibold uppercase tracking-wide text-white/40">
-                Listen on your favourite platform
-              </p>
-              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-white/70">
-                <a href={site.social.spotify} className="hover:text-green-light">
-                  Spotify
-                </a>
-                <a href={site.social.applePodcasts} className="hover:text-green-light">
-                  Apple Podcasts
-                </a>
-                <a href={site.social.youtube} className="hover:text-green-light">
-                  YouTube
-                </a>
+            {(site.social.spotify || site.social.applePodcasts || site.social.youtube) && (
+              <div className="mt-8">
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+                  Listen on your favourite platform
+                </p>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-white/70">
+                  {site.social.spotify && (
+                    <a href={site.social.spotify} className="hover:text-green-light">
+                      Spotify
+                    </a>
+                  )}
+                  {site.social.applePodcasts && (
+                    <a href={site.social.applePodcasts} className="hover:text-green-light">
+                      Apple Podcasts
+                    </a>
+                  )}
+                  {site.social.youtube && (
+                    <a href={site.social.youtube} className="hover:text-green-light">
+                      YouTube
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="relative mx-auto aspect-square w-full max-w-md">
@@ -85,7 +93,7 @@ export default function Home() {
         <Container>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <SectionHeading eyebrow="Fresh from the studio" title="Latest Episodes" />
-            <Link href="/episodes" className="text-sm font-bold text-green hover:text-green-2">
+            <Link href="/episodes" className="text-sm font-bold text-green-ink hover:text-green-ink-hover">
               View all episodes →
             </Link>
           </div>
@@ -101,7 +109,7 @@ export default function Home() {
       <section className="bg-navy py-16 text-white sm:py-20">
         <Container className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8">
-            <Badge tone="green">Policy Made Simple</Badge>
+            <Badge tone="greenOnDark">Policy Made Simple</Badge>
             <h3 className="mt-4 text-xl font-extrabold text-white">{explainer.title}</h3>
             <p className="mt-3 text-sm leading-relaxed text-white/65">{explainer.summary}</p>
             <Link
@@ -137,7 +145,7 @@ export default function Home() {
               >
                 <p className="text-sm leading-relaxed text-foreground/80">“{voice.quote}”</p>
                 <footer className="mt-4 text-xs font-bold text-navy">
-                  {voice.name} <span className="font-medium text-foreground/50">— {voice.role}, {voice.location}</span>
+                  {voice.name} <span className="font-medium text-foreground/60">— {voice.role}, {voice.location}</span>
                 </footer>
               </blockquote>
             ))}
@@ -165,9 +173,13 @@ export default function Home() {
           <Container>
             <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-green/20 bg-green/5 p-6 sm:flex-row sm:items-center sm:p-8">
               <div>
-                <Badge tone="green">Upcoming • {nextEvent.type}</Badge>
+                {/* Solid white chip, not the usual translucent tint — this
+                    badge sits on the green-tinted panel below, and the
+                    tint-on-tint would otherwise erode contrast below AA
+                    (measured with axe-core). */}
+                <Badge tone="green" className="!bg-white">Upcoming • {nextEvent.type}</Badge>
                 <h3 className="mt-3 text-xl font-extrabold text-navy">{nextEvent.title}</h3>
-                <p className="mt-2 text-sm text-foreground/60">
+                <p className="mt-2 text-sm text-foreground/65">
                   {formatDate(nextEvent.date)} • {nextEvent.time} • {nextEvent.venue}
                 </p>
               </div>
@@ -193,10 +205,10 @@ export default function Home() {
               Learn more →
             </Link>
           </div>
-          <div className="rounded-2xl bg-green p-6 text-white">
+          <div className="rounded-2xl bg-green-ink p-6 text-white">
             <IconCircle light>{usersSvg}</IconCircle>
             <h3 className="mt-4 text-sm font-bold uppercase tracking-wide">Get Involved</h3>
-            <p className="mt-2 text-sm leading-relaxed text-white/85">
+            <p className="mt-2 text-sm leading-relaxed text-white/90">
               Join a growing movement of young leaders and changemakers. Be a volunteer, host, partner or advocate
               for better governance.
             </p>
@@ -210,14 +222,14 @@ export default function Home() {
             <ul className="mt-3 space-y-2 text-sm">
               {latestNews.map((n) => (
                 <li key={n.slug}>
-                  <Link href={`/news/${n.slug}`} className="font-semibold text-navy hover:text-green">
+                  <Link href={`/news/${n.slug}`} className="font-semibold text-navy hover:text-green-ink">
                     {n.title}
                   </Link>
-                  <div className="text-xs text-foreground/45">{formatDate(n.date)}</div>
+                  <div className="text-xs text-foreground/60">{formatDate(n.date)}</div>
                 </li>
               ))}
             </ul>
-            <Link href="/news" className="mt-4 inline-flex text-sm font-bold text-green hover:text-green-2">
+            <Link href="/news" className="mt-4 inline-flex text-sm font-bold text-green-ink hover:text-green-ink-hover">
               View all news →
             </Link>
           </div>

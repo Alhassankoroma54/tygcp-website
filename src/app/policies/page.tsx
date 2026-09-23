@@ -4,7 +4,19 @@ import Container from "@/components/Container";
 import { editorialPolicySummary, safeguardingMeasures, privacyPrinciples } from "@/data/resources";
 import { guidingPrinciples } from "@/data/about";
 
-export const metadata: Metadata = { title: "Policies" };
+export const metadata: Metadata = {
+  title: "Policies",
+  description:
+    "Editorial policy, fact-checking, safeguarding, complaints and privacy — the standards that govern everything we publish.",
+  alternates: { canonical: "/policies" },
+  openGraph: {
+    title: "Policies",
+    description:
+      "Editorial policy, fact-checking, safeguarding, complaints and privacy — the standards that govern everything we publish.",
+    type: "website",
+    url: "/policies",
+  },
+};
 
 function PolicyBlock({ title, items }: { title: string; items: string[] }) {
   return (
@@ -40,7 +52,7 @@ export default function PoliciesPage() {
           <p className="mt-3 text-sm leading-relaxed text-foreground/70">
             If you believe something we&rsquo;ve published is inaccurate, unfair, or should be corrected, please
             contact the editorial team using the details on our{" "}
-            <a href="/contact" className="font-semibold text-green hover:text-green-2">
+            <a href="/contact" className="font-semibold text-green-ink hover:text-green-ink-hover">
               Contact page
             </a>
             . We aim to acknowledge complaints within a reasonable timeframe and will issue corrections where

@@ -5,20 +5,34 @@ export const site = {
   tagline: "Youth Voices. Better Governance. Stronger Sierra Leone.",
   description:
     "A national youth civic engagement, governance communication and accountability podcast, connecting young Sierra Leoneans with policymakers, institutions and each other.",
-  url: "https://tygcp.org",
+  // Configurable per deployment: set NEXT_PUBLIC_SITE_URL in the environment
+  // (e.g. your Vercel production URL) so metadata, the sitemap, structured
+  // data and canonical links all point at the real deployed domain instead
+  // of this placeholder. Must not include a trailing slash.
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://tygcp.org",
   email: "yigsil38@gmail.com",
   phones: ["+232 34 930 669", "+232 74 612 977"],
   address: "67 Hill Cot Road, Wilberforce, Freetown, Sierra Leone",
+  /**
+   * Left blank intentionally — no TYGCP/YIGSIL social or podcast-host
+   * accounts have been created/verified yet, and this project does not
+   * invent account handles. Every UI that reads from `social` (Header,
+   * Footer, the homepage hero) checks for a non-empty string and hides
+   * that link entirely when unset, rather than pointing to a guessed URL —
+   * so the honest state right now is simply "no social links shown."
+   * Fill in real, verified URLs here once accounts exist; no other file
+   * needs to change.
+   */
   social: {
-    youtube: "https://youtube.com/@tygcp",
-    facebook: "https://facebook.com/tygcp",
-    instagram: "https://instagram.com/tygcp",
-    tiktok: "https://tiktok.com/@tygcp",
-    twitter: "https://x.com/tygcp",
-    linkedin: "https://linkedin.com/company/tygcp",
-    whatsapp: "https://wa.me/23274612977",
-    spotify: "https://open.spotify.com",
-    applePodcasts: "https://podcasts.apple.com",
+    youtube: "",
+    facebook: "",
+    instagram: "",
+    tiktok: "",
+    twitter: "",
+    linkedin: "",
+    whatsapp: "",
+    spotify: "",
+    applePodcasts: "",
   },
 };
 

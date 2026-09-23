@@ -1,0 +1,78 @@
+// TYGCP website — persistence layer.
+//
+// Scope decision (see README.md "Content & Data Architecture" section for the
+// full reasoning): only form-submission data is modeled here. Episodes, news,
+// events, partners, etc. remain in src/data/*.ts for now — duplicating them
+// into empty, unused database tables before there's a real CMS/admin workflow
+// driving them would be premature. This schema exists to solve the one gap
+// file-based content can never solve: submitted form data has to land
+// somewhere durable.
+//
+// Local development/testing uses SQLite (this file, tracked nowhere — see
+// .gitignore) so the whole submission pipeline can be built and verified
+// without any external service. Production on Vercel CANNOT use SQLite (its
+// filesystem is ephemeral/read-only per invocation), so before deploying,
+// switch `provider` below to "postgresql" and point DATABASE_URL at a real
+// serverless-friendly Postgres (Vercel Postgres, Neon, or Supabase all work
+// with zero other schema changes — every field/type used below is supported
+// identically by both providers).
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  reason    String
+  message   String
+  status    String   @default("new") // new | read | archived
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model MinisterQuestion {
+  id        String   @id @default(cuid())
+  name      String
+  district  String?
+  topic     String?
+  question  String
+  status    String   @default("new") // new | reviewed | featured | archived
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  // Double opt-in is not implemented yet (see README) — every subscriber is
+  // recorded as unconfirmed until a real ESP integration adds a verification
+  // step. Keeping the field now avoids a migration later.
+  confirmed Boolean  @default(false)
+
+  @@index([createdAt])
+}
+
+model RsvpSubmission {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String
+  district   String?
+  eventSlug  String
+  eventTitle String
+  createdAt  DateTime @default(now())
+
+  @@index([eventSlug])
+  @@index([createdAt])
+}

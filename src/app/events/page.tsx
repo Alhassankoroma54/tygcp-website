@@ -6,7 +6,19 @@ import RsvpForm from "@/components/forms/RsvpForm";
 import { getUpcomingEvents, getPastEvents } from "@/data/events";
 import { formatDate } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Events & Dialogues" };
+export const metadata: Metadata = {
+  title: "Events & Dialogues",
+  description:
+    "Youth dialogues, Jubilee-style forums and live recordings — with registration and recaps.",
+  alternates: { canonical: "/events" },
+  openGraph: {
+    title: "Events & Dialogues",
+    description:
+      "Youth dialogues, Jubilee-style forums and live recordings — with registration and recaps.",
+    type: "website",
+    url: "/events",
+  },
+};
 
 export default function EventsPage() {
   const upcoming = getUpcomingEvents();
@@ -35,13 +47,13 @@ export default function EventsPage() {
               {e.registrationOpen && (
                 <div className="rounded-xl bg-navy/[0.03] p-5">
                   <p className="mb-3 text-xs font-bold uppercase tracking-wide text-navy/60">Register to attend</p>
-                  <RsvpForm eventTitle={e.title} />
+                  <RsvpForm eventTitle={e.title} eventSlug={e.slug} />
                 </div>
               )}
             </div>
           ))}
           {upcoming.length === 0 && (
-            <p className="text-sm text-foreground/55">No upcoming events scheduled right now — check back soon.</p>
+            <p className="text-sm text-foreground/60">No upcoming events scheduled right now — check back soon.</p>
           )}
         </div>
 
@@ -53,7 +65,7 @@ export default function EventsPage() {
                 <div key={e.slug} className="rounded-2xl border border-navy/10 bg-white/60 p-5">
                   <Badge tone="outline">{e.type}</Badge>
                   <h3 className="mt-2 text-sm font-bold text-navy">{e.title}</h3>
-                  <p className="text-xs text-foreground/45">{formatDate(e.date)} • {e.venue}</p>
+                  <p className="text-xs text-foreground/60">{formatDate(e.date)} • {e.venue}</p>
                   {e.recap && <p className="mt-2 text-sm text-foreground/60">{e.recap}</p>}
                 </div>
               ))}

@@ -5,7 +5,19 @@ import Container from "@/components/Container";
 import { governanceTopics, signatureSeries } from "@/data/topics";
 import { episodes } from "@/data/episodes";
 
-export const metadata: Metadata = { title: "Governance Topics" };
+export const metadata: Metadata = {
+  title: "Governance Topics",
+  description:
+    "Ten thematic pillars organise everything we produce — from democracy and public finance to climate resilience and digital citizenship.",
+  alternates: { canonical: "/governance-topics" },
+  openGraph: {
+    title: "Governance Topics",
+    description:
+      "Ten thematic pillars organise everything we produce — from democracy and public finance to climate resilience and digital citizenship.",
+    type: "website",
+    url: "/governance-topics",
+  },
+};
 
 export default function GovernanceTopicsPage() {
   return (
@@ -23,7 +35,7 @@ export default function GovernanceTopicsPage() {
               <div key={topic.slug} className="rounded-2xl border border-navy/10 bg-white p-6 shadow-sm">
                 <h3 className="text-sm font-bold text-navy">{topic.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-foreground/60">{topic.description}</p>
-                <p className="mt-4 text-xs font-bold uppercase tracking-wide text-green">
+                <p className="mt-4 text-xs font-bold uppercase tracking-wide text-green-ink">
                   {count} episode{count === 1 ? "" : "s"}
                 </p>
               </div>
@@ -43,9 +55,9 @@ export default function GovernanceTopicsPage() {
           </div>
         </div>
 
-        <p className="mt-10 text-sm text-foreground/50">
+        <p className="mt-10 text-sm text-foreground/60">
           Looking for something specific?{" "}
-          <Link href="/episodes" className="font-semibold text-green hover:text-green-2">
+          <Link href="/episodes" className="font-semibold text-green-ink hover:text-green-ink-hover">
             Browse and filter all episodes →
           </Link>
         </p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useFormSubmit, FormNote } from "./FormShell";
+import { useFormSubmit, FormNote, Honeypot } from "./FormShell";
 import Button from "../Button";
 
 const reasons = [
@@ -12,22 +12,26 @@ const reasons = [
   "Complaint / feedback",
 ];
 
+const emptyForm = { name: "", email: "", reason: reasons[0], message: "", company: "" };
+
 export default function ContactForm() {
-  const [form, setForm] = useState({ name: "", email: "", reason: reasons[0], message: "" });
+  const [form, setForm] = useState(emptyForm);
   const { status, message, submit } = useFormSubmit("/api/contact");
 
   return (
     <form
       className="grid gap-4"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        submit(form);
+        const ok = await submit(form);
+        if (ok) setForm(emptyForm);
       }}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Full name">
           <input
             required
+            autoComplete="name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="input"
@@ -37,6 +41,7 @@ export default function ContactForm() {
           <input
             required
             type="email"
+            autoComplete="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             className="input"
@@ -65,7 +70,8 @@ export default function ContactForm() {
           className="input resize-none"
         />
       </Field>
-      <Button type="submit" variant="primary" className="w-fit">
+      <Honeypot value={form.company} onChange={(company) => setForm({ ...form, company })} />
+      <Button type="submit" variant="primary" className="w-fit" disabled={status === "loading"}>
         {status === "loading" ? "Sending…" : "Send Message"}
       </Button>
       <FormNote status={status} message={message} />

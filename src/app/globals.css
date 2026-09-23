@@ -13,6 +13,22 @@
   --brand-green-light: #86efac;
   --brand-cream: #f6f8fb;
   --brand-gold: #f2b705;
+
+  /*
+   * WCAG 2.2 AA text pass (Aug 2026): --brand-green (#17a34a) measures
+   * 3.29:1 against white and 3.10:1 against --background — below the 4.5:1
+   * normal-text minimum, though it's still fine for large/bold display type
+   * and for text on the navy surfaces it was designed against (5.24:1).
+   * --brand-green-ink is the same hue darkened until it clears 4.5:1 on
+   * both light surfaces (5.23:1 on white, 4.91:1 on --background) — use it
+   * for green *text* (and text-on-green-background, e.g. buttons) that sits
+   * on a light/white surface. Keep --brand-green for text on navy/dark
+   * surfaces and for purely decorative use (borders, icon fills, gradients)
+   * where only the 3:1 non-text threshold applies. Verified with a
+   * standalone relative-luminance/contrast script, not estimated.
+   */
+  --brand-green-ink: #127d39;
+  --brand-green-ink-hover: #0f6b31;
 }
 
 @theme inline {
@@ -24,15 +40,59 @@
   --color-green: var(--brand-green);
   --color-green-2: var(--brand-green-2);
   --color-green-light: var(--brand-green-light);
+  --color-green-ink: var(--brand-green-ink);
+  --color-green-ink-hover: var(--brand-green-ink-hover);
   --color-cream: var(--brand-cream);
   --color-gold: var(--brand-gold);
-  --font-sans: "Segoe UI", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-body);
+}
+
+/* Headings use the display face (Manrope); body copy uses Inter (--font-body,
+   set above). This is the only global typographic rule — every heading in
+   the app is a semantic h1-h6, so this covers the whole site from one place
+   instead of a font class repeated on every component. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-sans);
+}
+
+/* Respect the user's OS-level motion preference: anything using CSS
+   transitions/animations (button hovers, the mobile nav, etc.) collapses to
+   near-instant rather than fighting a reduced-motion request. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visible keyboard focus on every interactive element (buttons, links, form
+   controls, the podcast player's range inputs). Only shows for keyboard/
+   assistive-tech focus, not mouse clicks, via :focus-visible. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--brand-green-ink);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 @layer utilities {
@@ -70,8 +130,54 @@ body {
   }
   .input:focus {
     outline: none;
-    border-color: var(--brand-green);
-    box-shadow: 0 0 0 3px rgba(23, 163, 74, 0.15);
+    border-color: var(--brand-green-ink);
+    box-shadow: 0 0 0 3px rgba(18, 125, 57, 0.15);
+  }
+
+  /* Podcast player transport/volume sliders (see PodcastPlayer.tsx). A
+     native <input type="range"> styled to match the brand — the filled
+     portion is driven by the --player-progress custom property each slider
+     sets inline, so this stays one rule for both the seek bar and volume. */
+  .player-range {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    width: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to right,
+      var(--brand-green-ink) 0%,
+      var(--brand-green-ink) var(--player-progress, 0%),
+      rgba(10, 27, 51, 0.12) var(--player-progress, 0%),
+      rgba(10, 27, 51, 0.12) 100%
+    );
+    outline: none;
+    cursor: pointer;
+  }
+  .player-range:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .player-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--brand-green-ink);
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(10, 27, 51, 0.15);
+  }
+  .player-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--brand-green-ink);
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(10, 27, 51, 0.15);
+  }
+  .player-range::-moz-range-track {
+    background: transparent;
   }
 }
 

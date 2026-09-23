@@ -19,7 +19,7 @@ export default function Footer() {
             </span>
           </div>
           <p className="mt-4 text-sm leading-relaxed">{site.tagline}</p>
-          <p className="mt-4 text-xs leading-relaxed text-white/40">{site.address}</p>
+          <p className="mt-4 text-xs leading-relaxed text-white/50">{site.address}</p>
         </div>
 
         <div>
@@ -53,23 +53,31 @@ export default function Footer() {
           <p className="mt-4 text-sm">{site.email}</p>
           <p className="text-sm">{site.phones.join(" / ")}</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            {Object.entries(site.social).map(([key, href]) => (
-              <a
-                key={key}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-bold uppercase hover:bg-green"
-              >
-                {key.slice(0, 2)}
-              </a>
-            ))}
+            {Object.entries(site.social)
+              // No social accounts have been created/verified yet (see
+              // src/data/site.ts) — every entry is "" until real ones
+              // exist, so skip rendering rather than link to a guess.
+              .filter(([, href]) => href)
+              .map(([key, href]) => (
+                <a
+                  key={key}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-bold uppercase hover:bg-green"
+                >
+                  {key.slice(0, 2)}
+                </a>
+              ))}
+            {Object.values(site.social).every((href) => !href) && (
+              <p className="text-xs text-white/50">Social links coming soon.</p>
+            )}
           </div>
         </div>
       </Container>
 
       <div className="border-t border-white/10 py-6">
-        <Container className="flex flex-col items-center justify-between gap-3 text-xs text-white/40 sm:flex-row">
+        <Container className="flex flex-col items-center justify-between gap-3 text-xs text-white/50 sm:flex-row">
           <p>
             © {new Date().getFullYear()} {site.org}. All rights reserved.
           </p>

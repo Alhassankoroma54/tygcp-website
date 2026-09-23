@@ -1,3 +1,9 @@
+/**
+ * ILLUSTRATIVE EXAMPLE CONTENT — these posts (including attendance/
+ * question counts quoted in the body text) are placeholders demonstrating
+ * the news system, not real published announcements. Replace with actual
+ * news before launch; do not treat the figures here as reported facts.
+ */
 export type NewsPost = {
   slug: string;
   title: string;

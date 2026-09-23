@@ -1,3 +1,10 @@
+/**
+ * ILLUSTRATIVE EXAMPLE CONTENT — these events (including the past event's
+ * attendance figure in `recap`) are placeholders demonstrating the events
+ * system, not a record of events that have actually happened or been
+ * scheduled. Replace with real dates, venues and confirmed attendance
+ * before launch.
+ */
 export type EventItem = {
   slug: string;
   title: string;
@@ -20,7 +27,10 @@ export const events: EventItem[] = [
     venue: "YIGSIL Studio, Wilberforce, Freetown",
     description:
       "Fifteen young people from different backgrounds question a public official directly on youth employment policy. Open to registered youth ages 18-35.",
-    registrationOpen: true,
+    // Date has passed — registration correctly closed. See src/data/events.ts
+    // header comment: these are illustrative sample dates, not a real
+    // schedule; replace with real upcoming events before launch.
+    registrationOpen: false,
   },
   {
     slug: "district-dialogue-bo",
@@ -31,7 +41,8 @@ export const events: EventItem[] = [
     venue: "Bo Community Centre",
     description:
       "A community-level dialogue session on ward development planning, participatory budgeting and local accountability, with mobile recording for the podcast archive.",
-    registrationOpen: true,
+    // Date has passed — registration correctly closed. See above.
+    registrationOpen: false,
   },
   {
     slug: "live-recording-policy-made-simple",
@@ -46,6 +57,10 @@ export const events: EventItem[] = [
       "Over 40 young people attended this live recording, contributing questions that shaped the follow-up episode 'Budgeting for Change'.",
   },
 ];
+
+export function getEventBySlug(slug: string) {
+  return events.find((e) => e.slug === slug);
+}
 
 export function getUpcomingEvents() {
   const now = Date.now();

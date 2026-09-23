@@ -4,13 +4,15 @@ import { cn } from "@/lib/utils";
 type Variant = "primary" | "outline" | "outlineLight" | "ghost";
 
 const variants: Record<Variant, string> = {
+  // bg-green-ink (not the brighter --brand-green) so the white label text
+  // clears 4.5:1 — see globals.css for the measured contrast rationale.
   primary:
-    "bg-green text-white hover:bg-green-2 shadow-sm shadow-green/20",
+    "bg-green-ink text-white hover:bg-green-ink-hover shadow-sm shadow-green-ink/20",
   outline:
     "border border-navy/20 text-navy hover:bg-navy/5",
   outlineLight:
     "border border-white/30 text-white hover:bg-white/10",
-  ghost: "text-navy hover:text-green",
+  ghost: "text-navy hover:text-green-ink",
 };
 
 export default function Button({
@@ -21,6 +23,7 @@ export default function Button({
   icon,
   type,
   onClick,
+  disabled,
 }: {
   href?: string;
   children: React.ReactNode;
@@ -29,10 +32,12 @@ export default function Button({
   icon?: React.ReactNode;
   type?: "button" | "submit";
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   const classes = cn(
     "inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap",
     variants[variant],
+    disabled && "cursor-not-allowed opacity-60",
     className
   );
 
@@ -46,7 +51,7 @@ export default function Button({
   }
 
   return (
-    <button type={type ?? "button"} onClick={onClick} className={classes}>
+    <button type={type ?? "button"} onClick={onClick} disabled={disabled} className={classes}>
       {children}
       {icon}
     </button>

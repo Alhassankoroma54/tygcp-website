@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Container from "./Container";
 import Button from "./Button";
-import { primaryNav, exploreNav, site } from "@/data/site";
+import { primaryNav, exploreNav } from "@/data/site";
 import { cn } from "@/lib/utils";
 
 export default function Header() {
@@ -26,7 +26,7 @@ export default function Header() {
             <span className="block text-[13px] font-extrabold uppercase tracking-wide text-white">
               The Youth
             </span>
-            <span className="block text-[13px] font-extrabold uppercase tracking-wide text-green">
+            <span className="block text-[13px] font-extrabold uppercase tracking-wide text-green-light">
               Governance Circle
             </span>
             <span className="block text-[10px] font-medium uppercase tracking-widest text-white/50">
@@ -35,13 +35,14 @@ export default function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 lg:flex">
+        <nav className="hidden items-center gap-2 xl:flex" aria-label="Primary">
           {primaryNav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive(item.href) ? "page" : undefined}
               className={cn(
-                "text-sm font-semibold text-white/70 transition-colors hover:text-white",
+                "rounded-lg px-2 py-2 text-sm font-semibold text-white/70 transition-colors hover:text-white",
                 isActive(item.href) && "text-green hover:text-green"
               )}
             >
@@ -52,7 +53,9 @@ export default function Header() {
             <button
               onClick={() => setMoreOpen((v) => !v)}
               onBlur={() => setTimeout(() => setMoreOpen(false), 150)}
-              className="flex items-center gap-1 text-sm font-semibold text-white/70 transition-colors hover:text-white"
+              aria-expanded={moreOpen}
+              aria-haspopup="true"
+              className="flex items-center gap-1 rounded-lg px-2 py-2 text-sm font-semibold text-white/70 transition-colors hover:text-white"
             >
               Explore
               <ChevronIcon className={cn("h-3.5 w-3.5 transition-transform", moreOpen && "rotate-180")} />
@@ -63,6 +66,7 @@ export default function Header() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    aria-current={isActive(item.href) ? "page" : undefined}
                     className="block rounded-xl px-3 py-2 text-sm font-medium text-navy/80 hover:bg-navy/5 hover:text-navy"
                   >
                     {item.label}
@@ -73,40 +77,47 @@ export default function Header() {
           </div>
         </nav>
 
-        <div className="hidden shrink-0 lg:block">
-          <Button href={site.social.spotify} variant="primary" icon={<PlayIcon className="h-3.5 w-3.5" />}>
-            Listen Live
+        <div className="hidden shrink-0 xl:block">
+          {/* Links to the in-site episode archive (with the real player), not an
+              external platform — no Spotify/Apple Podcasts show URL exists yet. */}
+          <Button href="/episodes" variant="primary" icon={<PlayIcon className="h-3.5 w-3.5" />}>
+            Listen Now
           </Button>
         </div>
 
         <button
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white lg:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white xl:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
+          aria-expanded={open}
+          aria-controls="mobile-nav"
         >
           {open ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
         </button>
       </Container>
 
       {open && (
-        <div className="border-t border-white/10 bg-navy-2 lg:hidden">
-          <Container className="flex flex-col gap-1 py-4">
-            {[...primaryNav, ...exploreNav].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "rounded-lg px-3 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/5 hover:text-white",
-                  isActive(item.href) && "bg-white/5 text-green"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Button href={site.social.spotify} variant="primary" className="mt-3 w-full">
-              Listen Live
-            </Button>
+        <div id="mobile-nav" className="border-t border-white/10 bg-navy-2 xl:hidden">
+          <Container className="py-4">
+            <nav aria-label="Mobile" className="flex flex-col gap-1">
+              {[...primaryNav, ...exploreNav].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  className={cn(
+                    "rounded-lg px-3 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/5 hover:text-white",
+                    isActive(item.href) && "bg-white/5 text-green"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <Button href="/episodes" variant="primary" className="mt-3 w-full">
+                Listen Now
+              </Button>
+            </nav>
           </Container>
         </div>
       )}

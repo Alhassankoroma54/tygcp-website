@@ -2,9 +2,21 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
-import { partners, sponsorshipPackages } from "@/data/partners";
+import { sponsorshipPackages } from "@/data/partners";
 
-export const metadata: Metadata = { title: "Partners & Sponsors" };
+export const metadata: Metadata = {
+  title: "Partners & Sponsors",
+  description:
+    "A credible platform for supporting youth civic participation, with clear separation between sponsorship and editorial control.",
+  alternates: { canonical: "/partners" },
+  openGraph: {
+    title: "Partners & Sponsors",
+    description:
+      "A credible platform for supporting youth civic participation, with clear separation between sponsorship and editorial control.",
+    type: "website",
+    url: "/partners",
+  },
+};
 
 export default function PartnersPage() {
   return (
@@ -17,14 +29,21 @@ export default function PartnersPage() {
 
       <Container className="py-16 sm:py-20">
         <h2 className="text-lg font-bold text-navy">Our Partners</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {partners.map((p) => (
-            <div key={p.name} className="rounded-2xl border border-navy/10 bg-white p-5">
-              <p className="text-xs font-bold uppercase tracking-wide text-green">{p.category}</p>
-              <h3 className="mt-1 text-sm font-bold text-navy">{p.name}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-foreground/60">{p.description}</p>
-            </div>
-          ))}
+        {/*
+         * No partnership has been confirmed yet — this list is intentionally
+         * empty rather than showing a roster of institutions that haven't
+         * actually agreed to be named. See src/data/partners.ts: the
+         * `partners` array there is illustrative/example data only and is
+         * deliberately not rendered here until real, confirmed partners
+         * (with their agreement to be listed) are supplied.
+         */}
+        <div className="mt-6 rounded-2xl border border-dashed border-navy/15 bg-navy/[0.02] p-8 text-center">
+          <p className="text-sm font-semibold text-navy">Partnerships are still being finalized.</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-foreground/60">
+            We&rsquo;re in active discussions with government, civil society, academic and media
+            institutions across Sierra Leone. Confirmed partners will be listed here — with their
+            agreement — as those partnerships are formalized.
+          </p>
         </div>
       </Container>
 

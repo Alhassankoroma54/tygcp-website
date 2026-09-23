@@ -13,7 +13,7 @@ export default function CtaBanner({
   ctaHref: string;
 }) {
   return (
-    <section className="bg-green">
+    <section className="bg-green-ink">
       <Container className="flex flex-col items-center justify-between gap-4 py-8 text-center sm:flex-row sm:text-left">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
@@ -23,10 +23,10 @@ export default function CtaBanner({
           </span>
           <div>
             <p className="text-sm font-bold text-white">{title}</p>
-            <p className="text-sm text-white/85">{description}</p>
+            <p className="text-sm text-white/90">{description}</p>
           </div>
         </div>
-        <Button href={ctaHref} variant="outlineLight" className="border-white bg-white !text-green hover:bg-white/90">
+        <Button href={ctaHref} variant="outlineLight" className="border-white bg-white !text-green-ink hover:bg-white/90">
           {ctaLabel}
         </Button>
       </Container>

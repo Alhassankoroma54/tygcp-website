@@ -4,7 +4,19 @@ import Container from "@/components/Container";
 import ImpactStrip from "@/components/ImpactStrip";
 import { heroStats, resultsFramework, outcomes, targets12Month } from "@/data/impact";
 
-export const metadata: Metadata = { title: "Impact" };
+export const metadata: Metadata = {
+  title: "Impact",
+  description:
+    "How we measure whether audiences understand issues better, whether institutions engage with youth questions, and whether the platform stays trusted and viable.",
+  alternates: { canonical: "/impact" },
+  openGraph: {
+    title: "Impact",
+    description:
+      "How we measure whether audiences understand issues better, whether institutions engage with youth questions, and whether the platform stays trusted and viable.",
+    type: "website",
+    url: "/impact",
+  },
+};
 
 export default function ImpactPage() {
   return (
@@ -22,7 +34,7 @@ export default function ImpactPage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {targets12Month.map((t) => (
             <div key={t.label} className="rounded-2xl border border-navy/10 bg-white p-5">
-              <p className="text-xl font-extrabold text-green">{t.value}</p>
+              <p className="text-xl font-extrabold text-green-ink">{t.value}</p>
               <p className="mt-1 text-sm text-foreground/60">{t.label}</p>
             </div>
           ))}
@@ -47,7 +59,7 @@ export default function ImpactPage() {
         <h2 className="text-lg font-bold text-navy">Results Framework</h2>
         <div className="mt-6 overflow-x-auto rounded-2xl border border-navy/10 bg-white">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-navy/10 bg-navy/[0.03] text-xs font-bold uppercase tracking-wide text-navy/60">
+            <thead className="border-b border-navy/10 bg-navy/[0.03] text-xs font-bold uppercase tracking-wide text-navy/70">
               <tr>
                 <th className="px-4 py-3">Level</th>
                 <th className="px-4 py-3">Indicator</th>
@@ -61,7 +73,7 @@ export default function ImpactPage() {
                   <td className="px-4 py-3 font-semibold text-navy">{row.level}</td>
                   <td className="px-4 py-3 text-foreground/70">{row.indicator}</td>
                   <td className="px-4 py-3 text-foreground/70">{row.target}</td>
-                  <td className="px-4 py-3 text-foreground/50">{row.verification}</td>
+                  <td className="px-4 py-3 text-foreground/60">{row.verification}</td>
                 </tr>
               ))}
             </tbody>

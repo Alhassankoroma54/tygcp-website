@@ -3,7 +3,19 @@ import PageHero from "@/components/PageHero";
 import Container from "@/components/Container";
 import QuestionForm from "@/components/forms/QuestionForm";
 
-export const metadata: Metadata = { title: "Get Involved" };
+export const metadata: Metadata = {
+  title: "Get Involved",
+  description:
+    "Become a guest, volunteer, host, partner or advocate for better governance in Sierra Leone.",
+  alternates: { canonical: "/get-involved" },
+  openGraph: {
+    title: "Get Involved",
+    description:
+      "Become a guest, volunteer, host, partner or advocate for better governance in Sierra Leone.",
+    type: "website",
+    url: "/get-involved",
+  },
+};
 
 const ways = [
   {

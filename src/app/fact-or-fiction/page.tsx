@@ -5,13 +5,25 @@ import { factChecks } from "@/data/voices";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Fact or Fiction" };
+export const metadata: Metadata = {
+  title: "Fact or Fiction",
+  description:
+    "Evidence-based examination of governance claims circulating online — sourced, verified and explained.",
+  alternates: { canonical: "/fact-or-fiction" },
+  openGraph: {
+    title: "Fact or Fiction",
+    description:
+      "Evidence-based examination of governance claims circulating online — sourced, verified and explained.",
+    type: "website",
+    url: "/fact-or-fiction",
+  },
+};
 
 const verdictStyles: Record<string, string> = {
-  True: "bg-green/10 text-green",
-  False: "bg-red-50 text-red-600",
+  True: "bg-green-ink/10 text-green-ink",
+  False: "bg-red-50 text-red-700",
   Misleading: "bg-amber-50 text-amber-700",
-  Unverified: "bg-navy/5 text-navy/60",
+  Unverified: "bg-navy/5 text-navy/70",
 };
 
 export default function FactOrFictionPage() {
@@ -30,7 +42,7 @@ export default function FactOrFictionPage() {
                 <span className={cn("rounded-full px-3 py-1 text-xs font-bold", verdictStyles[fc.verdict])}>
                   {fc.verdict}
                 </span>
-                <span className="text-xs text-foreground/40">{formatDate(fc.date)}</span>
+                <span className="text-xs text-foreground/60">{formatDate(fc.date)}</span>
               </div>
               <h3 className="mt-4 text-base font-bold text-navy">{fc.claim}</h3>
               <p className="mt-2 text-sm leading-relaxed text-foreground/65">{fc.summary}</p>
