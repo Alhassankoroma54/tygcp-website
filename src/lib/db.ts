@@ -16,6 +16,20 @@
  * swap. It still cannot be executed inside the sandbox that wrote it — see
  * the Batch 1 report for exactly what was and wasn't verified.
  *
+ * PRISMA 7 CORRECTIVE UPDATE: the app is deployed against Neon Postgres, and
+ * Prisma 7 made driver adapters mandatory — `new PrismaClient()` with no
+ * arguments (which relied on a connection string living in the generated
+ * schema) no longer works, because schema.prisma can no longer carry a
+ * `url` at all (see prisma/schema.prisma's datasource comment). The client
+ * is now constructed with an explicit `@prisma/adapter-neon` instance built
+ * from DATABASE_URL (the pooled connection — unchanged from Batch 1;
+ * DIRECT_URL is unpooled and used only by the Prisma CLI, via
+ * prisma.config.ts, never here). The Neon adapter was chosen over the
+ * generic `@prisma/adapter-pg` because it talks to Neon over HTTP/WebSocket
+ * rather than holding a long-lived TCP connection per invocation — the same
+ * "many short-lived serverless invocations" concern that motivated the
+ * pooled/direct split in the first place.
+ *
  * CONTRACT CHANGE (deliberate, not silent — every caller was updated):
  * every exported function here is now `async` and returns a Promise, because
  * every `@prisma/client` call is asynchronous. The old SQLite version was
@@ -39,6 +53,7 @@
  * changed (missing/unreachable DATABASE_URL, not "we're on Vercel").
  */
 import { PrismaClient } from "@prisma/client";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
 // Reused across warm invocations (serverless function instances, and Next's
 // dev-mode hot reload) instead of constructing a new PrismaClient — and
@@ -65,7 +80,13 @@ function getClient(): PrismaClient | null {
   if (globalForPrisma.prismaClient) return globalForPrisma.prismaClient;
 
   try {
-    const client = new PrismaClient();
+    // Prisma 7: the client no longer has an implicit connection string, so
+    // it must always be constructed with an adapter. DATABASE_URL is the
+    // pooled connection — the correct one for a request-scoped runtime
+    // client (see the header comment above for why Neon's adapter, and why
+    // this is DATABASE_URL, not DIRECT_URL).
+    const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
+    const client = new PrismaClient({ adapter });
     globalForPrisma.prismaClient = client;
     return client;
   } catch (err) {

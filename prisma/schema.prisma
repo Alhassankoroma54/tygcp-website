@@ -13,26 +13,27 @@
 // this project shipped a hand-written node:sqlite implementation instead of a
 // generated Prisma client during Phase 2, and what changed in Batch 1).
 //
-// Two connection strings, not one, because Vercel's serverless functions open
-// many short-lived connections — a single unpooled connection string can
-// exhaust a small Postgres instance's connection limit under real traffic:
-//   - DATABASE_URL — the connection the running app uses for every normal
-//     query. Point this at your provider's POOLED connection string (Neon,
-//     Supabase and Vercel Postgres — which runs on Neon — all provide one,
-//     usually routed through PgBouncer).
-//   - DIRECT_URL — used only by `prisma migrate`, never by the running app.
-//     Point this at your provider's DIRECT (unpooled) connection string —
-//     some pooling proxies don't support the migration protocol.
-//   If your provider does NOT distinguish pooled vs. direct connections (a
-//   single traditional Postgres instance, for example), set DIRECT_URL to
-//   the exact same value as DATABASE_URL — both variables must still be
-//   defined (Prisma requires every env() referenced in this file to resolve),
-//   but there's no requirement that they point at different endpoints.
-
+// PHASE 3 BATCH 1 CORRECTIVE UPDATE (Prisma 7): Prisma ORM 7 removed the
+// `url` / `directUrl` fields from the `datasource` block entirely (schema
+// validation now fails with P1012 if they're present) — connection strings
+// are no longer part of the committed schema at all. Two things replace
+// them, and the two-connection-string reasoning below is unchanged, just
+// relocated:
+//   - CLI / migrations (`prisma generate`, `prisma migrate`, `prisma
+//     validate`, ...) now read their connection string from
+//     `prisma.config.ts` at the project root, which points at DIRECT_URL —
+//     your provider's DIRECT (unpooled) connection string. See that file
+//     for why: some pooling proxies (including Neon's default pooled
+//     endpoint) don't support the migration protocol.
+//   - The running app no longer gets a connection string from the schema at
+//     all. Prisma 7 requires an explicit driver adapter, constructed at
+//     runtime with DATABASE_URL — your provider's POOLED connection string
+//     — and passed into `new PrismaClient({ adapter })`. See src/lib/db.ts.
+// Both DATABASE_URL and DIRECT_URL are still the two env vars you set (in
+// Vercel, and in .env.local for local dev) — only *where Prisma reads them
+// from* changed, not their names or their pooled-vs-direct meaning.
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 generator client {
