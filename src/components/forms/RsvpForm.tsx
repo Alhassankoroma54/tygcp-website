@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useFormSubmit, FormNote, Honeypot } from "./FormShell";
 import Button from "../Button";
 
-const emptyForm = { name: "", phone: "", district: "", company: "" };
+const emptyForm = { name: "", phone: "", district: "", hp_check: "" };
 
 export default function RsvpForm({ eventTitle, eventSlug }: { eventTitle: string; eventSlug: string }) {
   const [form, setForm] = useState(emptyForm);
@@ -55,7 +55,7 @@ export default function RsvpForm({ eventTitle, eventSlug }: { eventTitle: string
         onChange={(e) => setForm({ ...form, district: e.target.value })}
         className="input"
       />
-      <Honeypot value={form.company} onChange={(company) => setForm({ ...form, company })} idPrefix={idPrefix} />
+      <Honeypot value={form.hp_check} onChange={(hp_check) => setForm({ ...form, hp_check })} idPrefix={idPrefix} />
       <Button type="submit" variant="primary" className="w-fit" disabled={status === "loading"}>
         {status === "loading" ? "Registering…" : "Register to Attend"}
       </Button>

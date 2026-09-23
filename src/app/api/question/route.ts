@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  if (parsed.data.company) {
+  if (parsed.data.hp_check) {
     return NextResponse.json({ message: "Thank you! Your question has been submitted." });
   }
 
@@ -33,6 +33,16 @@ export async function POST(req: Request) {
     topic: topic || undefined,
     question,
   });
+
+  // PRODUCTION HOTFIX: see api/contact/route.ts for the full diagnosis —
+  // same fix applied here.
+  if (!saved.persisted) {
+    console.error("[api/question] Persistence failed for a genuine submission; not reporting success.");
+    return NextResponse.json(
+      { error: "We couldn't save your submission right now. Please try again." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     message: "Thank you! Your question has been submitted and may be featured on an upcoming episode.",

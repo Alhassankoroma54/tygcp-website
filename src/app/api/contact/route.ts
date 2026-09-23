@@ -21,14 +21,34 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  if (parsed.data.company) {
+  if (parsed.data.hp_check) {
     // Honeypot tripped — respond success so the bot doesn't learn anything, but do nothing.
     return NextResponse.json({ message: "Thank you — your message has been received." });
   }
 
   const { name, email, reason, message } = parsed.data;
   const saved = await saveContactSubmission({ name, email, reason, message });
+  // Email notification still fires regardless of persistence outcome
+  // (unchanged from before this hotfix) — a DB write failure shouldn't also
+  // suppress the one other channel that could still get someone's message
+  // in front of a human.
   const emailResult = await notifyContactSubmission({ name, email, reason, message });
+
+  // PRODUCTION HOTFIX: a genuine (non-honeypot) submission that fails to
+  // persist must not be told it succeeded — this exact silent-failure shape
+  // (write skipped or failed, response still claims success) previously
+  // masked a false-positive honeypot trip caused by browser-autofill
+  // populating the old "company"-named field (see Honeypot in
+  // FormShell.tsx). The error message stays generic on purpose — no DB
+  // internals, no stack trace, no hint of *why* persistence failed — full
+  // diagnostic detail is server-side only (see the [db] logs in db.ts).
+  if (!saved.persisted) {
+    console.error("[api/contact] Persistence failed for a genuine submission; not reporting success.");
+    return NextResponse.json(
+      { error: "We couldn't save your submission right now. Please try again." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     message: "Thank you — your message has been received. We'll get back to you soon.",

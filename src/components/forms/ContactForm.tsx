@@ -12,7 +12,7 @@ const reasons = [
   "Complaint / feedback",
 ];
 
-const emptyForm = { name: "", email: "", reason: reasons[0], message: "", company: "" };
+const emptyForm = { name: "", email: "", reason: reasons[0], message: "", hp_check: "" };
 
 export default function ContactForm() {
   const [form, setForm] = useState(emptyForm);
@@ -70,7 +70,7 @@ export default function ContactForm() {
           className="input resize-none"
         />
       </Field>
-      <Honeypot value={form.company} onChange={(company) => setForm({ ...form, company })} />
+      <Honeypot value={form.hp_check} onChange={(hp_check) => setForm({ ...form, hp_check })} />
       <Button type="submit" variant="primary" className="w-fit" disabled={status === "loading"}>
         {status === "loading" ? "Sending…" : "Send Message"}
       </Button>

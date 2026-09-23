@@ -6,7 +6,7 @@ import Button from "../Button";
 
 export default function NewsletterForm({ light = false }: { light?: boolean }) {
   const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
+  const [hpCheck, setHpCheck] = useState("");
   const { status, message, submit } = useFormSubmit("/api/newsletter");
   const inputId = light ? "newsletter-email-light" : "newsletter-email";
 
@@ -15,7 +15,7 @@ export default function NewsletterForm({ light = false }: { light?: boolean }) {
       className="flex flex-col gap-2"
       onSubmit={async (e) => {
         e.preventDefault();
-        const ok = await submit({ email, company });
+        const ok = await submit({ email, hp_check: hpCheck });
         if (ok) setEmail("");
       }}
     >
@@ -41,7 +41,7 @@ export default function NewsletterForm({ light = false }: { light?: boolean }) {
           {status === "loading" ? "Sending…" : "Subscribe"}
         </Button>
       </div>
-      <Honeypot value={company} onChange={setCompany} />
+      <Honeypot value={hpCheck} onChange={setHpCheck} />
       <FormNote status={status} message={message} />
     </form>
   );
