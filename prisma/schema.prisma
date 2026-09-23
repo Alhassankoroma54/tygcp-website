@@ -87,6 +87,132 @@ model RsvpSubmission {
   eventTitle String
   createdAt  DateTime @default(now())
 
+  // PHASE 4 BATCH 1: optional link to a real Event row, added additively.
+  // Nullable and unrelated to any existing column, so every RSVP submitted
+  // before this batch (and every one submitted after it, until a future
+  // batch wires /api/rsvp to real DB-backed events — see that route's own
+  // comment) keeps working identically with eventId simply left null.
+  // eventSlug/eventTitle are NOT being removed or deprecated by this: they
+  // remain the fields the live /api/rsvp endpoint actually writes today.
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id])
+
   @@index([eventSlug])
   @@index([createdAt])
+  @@index([eventId])
+}
+
+// --- PHASE 4 BATCH 1: CMS foundation models --------------------------------
+//
+// Added per the Phase 4 Batch 1 brief: Episode, NewsArticle, and Event, the
+// first three models for the eventual database-driven publishing platform.
+// Public pages still read from src/data/*.ts (episodes.ts, news.ts,
+// events.ts) — nothing in this batch points any public route at these new
+// tables, and no migration has been run against the production database
+// (see prisma/migrations' Batch 1 migration header comment). These models
+// exist so the schema, the migration, and the admin foundation pages
+// (src/app/admin/episodes, /news, /events) can all be built and reviewed
+// together; wiring the public site to them, and building real CRUD editors
+// for them, are future-batch work — explicitly out of scope here.
+//
+// No episodes, articles, or events are seeded by this batch. These are
+// table definitions, not data.
+
+model Episode {
+  id     String  @id @default(cuid())
+  slug   String  @unique
+  title  String
+  // Short description for listing/cards — distinct from `transcript`
+  // (the full spoken content, when available).
+  summary String
+
+  // Sequential episode number. Nullable so a draft can exist before a
+  // number is assigned; @@unique below still enforces no two *numbered*
+  // episodes collide (Postgres unique indexes don't compare NULLs as
+  // equal, so any number of drafts can share a null episodeNumber).
+  episodeNumber Int?
+
+  // "Guest information" per the brief — kept to the two fields an episode
+  // card/detail page actually needs to credit a guest by name and role.
+  // Multiple co-guests or a full guest bio/photo are a reasonable future
+  // extension (a dedicated Guest model + join table) but are more than a
+  // Batch 1 foundation needs; not building that speculatively now.
+  guestName  String?
+  guestTitle String?
+
+  durationSeconds Int?
+  coverImageUrl   String?
+
+  // Distinct URL fields rather than one generic "link" — an episode
+  // legitimately has independent audio, video, and per-platform links, and
+  // a template rendering "listen on Spotify" vs "listen on Apple Podcasts"
+  // needs to know which is which rather than parsing a single URL.
+  audioUrl          String?
+  videoUrl          String?
+  spotifyUrl        String?
+  applePodcastsUrl  String?
+  youtubeUrl        String?
+
+  transcript String?
+
+  // Plain-string publishing status, matching this schema's existing
+  // convention (ContactSubmission.status, MinisterQuestion.status) rather
+  // than a Prisma enum — enums require a migration to add a new value,
+  // which is more friction than this status set needs.
+  status      String    @default("draft") // draft | scheduled | published
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([episodeNumber])
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model NewsArticle {
+  id      String  @id @default(cuid())
+  slug    String  @unique
+  title   String
+  summary String
+  content String
+
+  featuredImageUrl String?
+
+  status      String    @default("draft") // draft | published
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model Event {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  description String
+  location    String?
+
+  // Upcoming/past is derived from these at query time (e.g. `startsAt >
+  // now()`), per the brief — deliberately no separate "isUpcoming" /
+  // category flag to fall out of sync with the actual date.
+  startsAt DateTime
+  endsAt   DateTime?
+
+  coverImageUrl String?
+
+  status String @default("draft") // draft | published | cancelled
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Inverse side of RsvpSubmission.event — see that field's comment for
+  // why this is additive/nullable rather than a required backfill.
+  rsvps RsvpSubmission[]
+
+  @@index([status])
+  @@index([startsAt])
 }

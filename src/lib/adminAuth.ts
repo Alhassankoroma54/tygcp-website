@@ -15,6 +15,8 @@
  * memory between invocations.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const SESSION_COOKIE_NAME = "admin_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12; // 12 hours
@@ -70,3 +72,26 @@ export const sessionCookieOptions = {
   path: "/",
   maxAge: SESSION_MAX_AGE_SECONDS,
 };
+
+/**
+ * PHASE 4 BATCH 1 addition. Shared server-side guard for any /admin page
+ * that doesn't need admin/page.tsx's bespoke "not configured" screen (that
+ * one stays as-is, unchanged — this is for the new foundation pages added
+ * this batch, and any future ones). Redirects to /admin/login on either
+ * "admin isn't configured at all" or "no valid session" — src/proxy.ts
+ * already does this same check before the page even starts rendering, so
+ * in normal operation this function is a no-op; it exists as the
+ * documented defense-in-depth layer the Next.js Proxy docs recommend
+ * (proxy coverage can silently break if a future matcher change is wrong;
+ * a per-page check can't).
+ */
+export async function requireAdminSession(): Promise<void> {
+  if (!isAdminConfigured()) {
+    redirect("/admin/login");
+  }
+  const cookieStore = await cookies();
+  const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  if (!verifySessionCookieValue(session)) {
+    redirect("/admin/login");
+  }
+}
