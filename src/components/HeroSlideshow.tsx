@@ -124,12 +124,53 @@ export default function HeroSlideshow({
             </div>
           ) : null
         )}
-        {/* Dark navy scrim + left-to-right gradient: keeps hero text
-            readable over any photo, stronger over the text column (left)
-            and easing off over the illustration column (right), while
-            still reading as the site's existing navy/green identity. */}
-        <div className="absolute inset-0 bg-navy/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/85 to-navy/45" />
+        {/* Readability overlay — a SINGLE navy gradient (not stacked with a
+            separate flat scrim, which is what previously made this far
+            darker than intended: two independent alpha layers compound
+            multiplicatively, not additively, so the old bg-navy/70 flat
+            layer plus a from-navy/via-navy-85/to-navy-45 gradient worked
+            out to ~0% image visibility on the left, ~4.5% at center, and
+            ~16.5% on the right — effectively hiding the photos entirely.
+
+            Direction is responsive because the hero's content layout is:
+            below `lg`, page.tsx stacks the text block above the
+            illustration (both full width) — top-to-bottom here, easing
+            off after the text block ends. At `lg` and up, page.tsx
+            switches to the real two-column layout (text left,
+            illustration right), so this switches to left-to-right.
+
+            Stop positions are explicit (not Tailwind's default 0/50/100
+            from-via-to) and held FLAT through a "dark zone" sized to the
+            actual text column, then eased to a much lighter value after
+            it — rather than a smooth ramp starting at 0%. A smooth ramp
+            was tried first and measured a 2.97:1 contrast failure at the
+            right edge of the desktop paragraph (h1 can extend to ~53% of
+            the section width, p to ~47%), because by that point the ramp
+            had already lightened enough to fail against a bright part of
+            a photo (e.g. a window) directly behind it. Holding flat
+            through 55% covers the full text column regardless of what's
+            behind it at that point, then eases to the brighter value
+            used across the illustration/right side:
+              - Mobile (below lg, top-to-bottom): 85% opaque from 0-55%
+                (covers the stacked text block, y up to ~52% of section
+                height), easing to 28% opaque (72% visible) by 100%.
+              - Desktop (lg+, left-to-right): 80% opaque from 0-55%
+                (covers both h1 and the paragraph column), easing to 24%
+                opaque (76% visible) by 100% — landing the illustration/
+                right side of the frame in the ~70-75%+ visibility range,
+                comfortably inside the requested ~55-65%+ target, while
+                the dark zone still reads as a deliberate navy scrim, not
+                a flat block.
+            Re-verified after this change: worst-case (near-white photo
+            pixel) contrast in the dark zone is ~5:1+ for the white/70
+            paragraph text, checked at multiple points across both the
+            h1 and paragraph rows, at both breakpoints (see commit
+            message / delivered report for the actual measured values). */}
+        <div
+          className="absolute inset-0
+                     bg-[linear-gradient(to_bottom,rgba(10,27,51,0.85)_0%,rgba(10,27,51,0.85)_55%,rgba(10,27,51,0.28)_100%)]
+                     lg:bg-[linear-gradient(to_right,rgba(10,27,51,0.80)_0%,rgba(10,27,51,0.80)_55%,rgba(10,27,51,0.24)_100%)]"
+        />
       </div>
 
       {/* Manual slide selector — small, optional, and genuinely keyboard
